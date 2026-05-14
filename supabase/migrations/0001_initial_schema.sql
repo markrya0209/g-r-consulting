@@ -3,8 +3,7 @@
 -- G&R Consulting — Initial schema: 7 tables, RLS, trigger
 -- ============================================================
 
--- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- uuid-ossp not needed — gen_random_uuid() is built-in since Postgres 13
 
 -- ============================================================
 -- 1. users
@@ -39,7 +38,7 @@ CREATE POLICY "users_update_own" ON users
 -- 2. mentor_profiles
 -- ============================================================
 CREATE TABLE mentor_profiles (
-  id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id               UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   slug                  TEXT UNIQUE,
   bio                   TEXT,
@@ -85,7 +84,7 @@ CREATE POLICY "mentor_profiles_update_own" ON mentor_profiles
 -- 3. session_types
 -- ============================================================
 CREATE TABLE session_types (
-  id                 UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   mentor_profile_id  UUID NOT NULL REFERENCES mentor_profiles(id) ON DELETE CASCADE,
   type_key           TEXT NOT NULL CHECK (type_key IN (
     'cna','provas','ordem','curso','equiv','tutor','vida','intl'
@@ -136,7 +135,7 @@ CREATE POLICY "session_types_modify_own" ON session_types
 -- 4. bookings
 -- ============================================================
 CREATE TABLE bookings (
-  id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   mentee_id           UUID NOT NULL REFERENCES users(id),
   mentor_id           UUID NOT NULL REFERENCES users(id),
   mentor_profile_id   UUID NOT NULL REFERENCES mentor_profiles(id),
@@ -176,7 +175,7 @@ CREATE POLICY "bookings_update_participants" ON bookings
 -- 5. reviews
 -- ============================================================
 CREATE TABLE reviews (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_id        UUID NOT NULL UNIQUE REFERENCES bookings(id),
   mentee_id         UUID NOT NULL REFERENCES users(id),
   mentor_profile_id UUID NOT NULL REFERENCES mentor_profiles(id),
@@ -216,7 +215,7 @@ CREATE POLICY "reviews_update_own" ON reviews
 -- 6. outcome_reports
 -- ============================================================
 CREATE TABLE outcome_reports (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_id  UUID NOT NULL UNIQUE REFERENCES bookings(id),
   mentor_id   UUID NOT NULL REFERENCES users(id),
   summary     TEXT NOT NULL,
@@ -261,7 +260,7 @@ CREATE POLICY "outcome_reports_update_mentor" ON outcome_reports
 -- 7. payments
 -- ============================================================
 CREATE TABLE payments (
-  id                       UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_id               UUID NOT NULL REFERENCES bookings(id),
   stripe_payment_intent_id TEXT UNIQUE NOT NULL,
   stripe_charge_id         TEXT,
@@ -295,7 +294,7 @@ CREATE POLICY "payments_select_participants" ON payments
 -- 8. notifications (lightweight — Supabase Realtime)
 -- ============================================================
 CREATE TABLE notifications (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type        TEXT NOT NULL,
   title       TEXT NOT NULL,
