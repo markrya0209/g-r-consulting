@@ -34,8 +34,7 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect unauthenticated users away from protected routes
   const protectedPrefixes = [
-    "/(mentor)",
-    "/(mentee)",
+    "/dashboard",
     "/admin",
     "/sessions",
   ];
@@ -46,6 +45,18 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Email verification gate for protected routes
+  if (
+    user &&
+    isProtected &&
+    !pathname.startsWith("/email-verification") &&
+    !user.email_confirmed_at
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/email-verification";
     return NextResponse.redirect(url);
   }
 
