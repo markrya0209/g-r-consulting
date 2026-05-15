@@ -3,12 +3,11 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 
 function ResetConfirmContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -17,16 +16,21 @@ function ResetConfirmContent() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const token = searchParams.get('token');
-
+  // After the callback route exchanges the code for a session, the user lands
+  // here already authenticated. If there's no active session the link has expired.
   useEffect(() => {
-    if (!token) {
-      setError('Link de recuperação inválido ou expirado.');
-    }
-  }, [token]);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        setError('Link de recuperação inválido ou expirado. Pede um novo link.');
+        return;
+      }
+      setReady(true);
+    });
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +49,7 @@ function ResetConfirmContent() {
     setLoading(true);
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      });
+      const { error: updateError } = await supabase.auth.updateUser({ password });
 
       if (updateError) {
         setError(updateError.message);
@@ -55,9 +57,7 @@ function ResetConfirmContent() {
       }
 
       setSuccess(true);
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      setTimeout(() => router.push('/login'), 2000);
     } catch (err) {
       setError('Erro ao atualizar senha. Tente novamente.');
       console.error(err);
@@ -96,7 +96,7 @@ function ResetConfirmContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={!token}
+              disabled={!ready}
               className="w-full px-4 py-2 border border-[--grc-border] rounded-lg bg-white text-[--grc-ink] placeholder-[--grc-ink]/40 disabled:opacity-50"
               placeholder="••••••••"
             />
@@ -111,7 +111,7 @@ function ResetConfirmContent() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              disabled={!token}
+              disabled={!ready}
               className="w-full px-4 py-2 border border-[--grc-border] rounded-lg bg-white text-[--grc-ink] placeholder-[--grc-ink]/40 disabled:opacity-50"
               placeholder="••••••••"
             />
@@ -119,7 +119,7 @@ function ResetConfirmContent() {
 
           <button
             type="submit"
-            disabled={loading || !token}
+            disabled={loading || !ready}
             className="w-full bg-[--grc-accent] text-white font-medium py-2 rounded-lg hover:bg-opacity-90 disabled:opacity-50"
           >
             {loading ? 'Atualizando...' : 'Atualizar Senha'}

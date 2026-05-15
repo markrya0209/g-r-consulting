@@ -32,9 +32,15 @@ export default function EmailVerificationPage() {
 
       setEmail(user.email || null);
 
-      // If already verified, redirect to dashboard (need to check role first in real app)
       if (user.email_confirmed_at) {
-        router.push('/dashboard/mentor');
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        const dest = userData?.role === 'mentor' ? '/dashboard/mentor' : '/dashboard/mentee';
+        router.push(dest);
       }
 
       setChecking(false);
@@ -51,11 +57,17 @@ export default function EmailVerificationPage() {
     setSuccess(false);
 
     try {
-      // TODO: Implement proper email resend via Supabase Auth Hooks
-      // For now, this is a placeholder that uses the verification link generation
-      // In production, this would trigger the Auth Hook to send via Resend
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      });
+
+      if (resendError) {
+        setError(resendError.message);
+        return;
+      }
+
       setSuccess(true);
-      setError(null);
       setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
       setError('Erro ao reenviar email. Tente novamente.');
