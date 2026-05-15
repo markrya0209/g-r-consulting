@@ -89,6 +89,9 @@ export interface Database {
           email_verified: boolean;
           institutional_email: string | null;
           institutional_verified: boolean;
+          student_type: string | null;
+          target_pathway: string | null;
+          desired_course: string | null;
           deleted_at: string | null;
           created_at: string;
           updated_at: string;
@@ -99,6 +102,9 @@ export interface Database {
           display_name?: string | null;
           photo_url?: string | null;
           role: UserRole;
+          student_type?: string | null;
+          target_pathway?: string | null;
+          desired_course?: string | null;
           terms_accepted_at?: string | null;
           tos_version?: string | null;
           gdpr_consent_at?: string | null;
@@ -123,6 +129,9 @@ export interface Database {
           email_verified?: boolean;
           institutional_email?: string | null;
           institutional_verified?: boolean;
+          student_type?: string | null;
+          target_pathway?: string | null;
+          desired_course?: string | null;
           deleted_at?: string | null;
           updated_at?: string;
         };
@@ -131,6 +140,7 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
+          display_name: string | null;
           slug: string | null;
           bio: string | null;
           university: string | null;
@@ -155,6 +165,7 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
+          display_name?: string | null;
           slug?: string | null;
           bio?: string | null;
           university?: string | null;
@@ -179,6 +190,7 @@ export interface Database {
         Update: {
           id?: string;
           user_id?: string;
+          display_name?: string | null;
           slug?: string | null;
           bio?: string | null;
           university?: string | null;
@@ -413,7 +425,12 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      generate_mentor_slug: {
+        Args: { p_display_name: string; p_exclude_id?: string };
+        Returns: string;
+      };
+    };
     Enums: {
       user_role: UserRole;
       booking_status: BookingStatus;
