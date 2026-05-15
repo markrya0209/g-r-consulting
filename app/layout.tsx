@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
+import CookieConsent from "@/components/CookieConsent";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-[#FBF9F5] text-[#15161B] font-sans">
         {children}
+        <CookieConsent />
       </body>
     </html>
   );

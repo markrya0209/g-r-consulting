@@ -1,6 +1,5 @@
 import { Resend } from "resend";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createServiceClient } from "@/lib/supabase/server";
 
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -44,33 +43,14 @@ export async function sendEmailWithFallback({
     console.error("[Resend] email send failed, queuing for retry:", error);
 
     try {
-      const cookieStore = await cookies();
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll();
-            },
-            setAll(cookiesToSet) {
-              try {
-                cookiesToSet.forEach(({ name, value, options }) =>
-                  cookieStore.set(name, value, options)
-                );
-              } catch {
-                // Handle error when setting cookies
-              }
-            },
-          },
-        }
-      );
+      const supabase = await createServiceClient();
 
-      await supabase.from("email_queue").insert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from("email_queue") as any).insert({
         to,
         subject,
         template: template || "generic",
-        payload: payload || { subject, react: react.toString() },
+        payload: payload || { subject },
         status: "failed",
         attempts: 0,
       });

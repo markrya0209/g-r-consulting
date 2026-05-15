@@ -40,6 +40,41 @@ export type SessionTypeKey =
 export interface Database {
   public: {
     Tables: {
+      email_queue: {
+        Row: {
+          id: string;
+          to: string;
+          subject: string;
+          template: string;
+          payload: Json;
+          status: 'pending' | 'sent' | 'failed';
+          attempts: number;
+          created_at: string;
+          last_attempted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          to: string;
+          subject: string;
+          template: string;
+          payload?: Json;
+          status?: 'pending' | 'sent' | 'failed';
+          attempts?: number;
+          created_at?: string;
+          last_attempted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          to?: string;
+          subject?: string;
+          template?: string;
+          payload?: Json;
+          status?: 'pending' | 'sent' | 'failed';
+          attempts?: number;
+          created_at?: string;
+          last_attempted_at?: string | null;
+        };
+      };
       users: {
         Row: {
           id: string;
